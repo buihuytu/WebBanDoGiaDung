@@ -1,0 +1,103 @@
+﻿@model WebsiteBanDoGiaDung.Models.MSlider
+
+@{
+    ViewBag.Title = "Tạo slider";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+@Html.Partial("_MessageAlert")
+@Html.AntiForgeryToken()
+
+<section class="content py-2">
+    <div class="container-fluid">
+        <!--Content-->
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-8">
+                        <h5 class="text-csm">@ViewBag.Title<span style="display:none" id="session">@HttpContext.Current.Session["Admin_ID"].ToString()</span></h5>
+                    </div>
+                    <div class="col-4">
+                        <div class="float-right pt-1">
+                            <button type="submit" class="btn btn-primary btn-sm" onclick="addClick();">
+                                <i class="fas fa-save"></i>&nbsp; Save
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm">
+                                <a href="~/Admin/Slider" class="text-white"><i class="fas fa-door-open"></i>&nbsp; Thoát</a>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="form-horizontal">
+                    <div class="row">
+                        <div class="col-12">
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                            <div class="form-group">
+                                @Html.Label("Tên Slider", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                                
+                            <div class="form-group">
+                                @Html.Label("Hình ảnh", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.TextBoxFor(model => model.Image, new { type = "file", @class = "control-label", accept="image/*" })
+                                    @Html.ValidationMessageFor(model => model.Image, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Vị trí hiển thị", htmlAttributes: new { @class = "control-label " })
+                                <div class="">
+                                    @Html.DropDownListFor(model => model.Position, new[] { new SelectListItem { Value = "1", Text = "SlideShow" }, new SelectListItem { Value = "2", Text = "RightSlideShow" } }, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.Position, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Trạng thái", htmlAttributes: new { @class = "control-label " })
+                                <div class="">
+                                    @Html.DropDownListFor(model => model.Status, new[] { new SelectListItem { Value = "1", Text = "Hiển thị" }, new SelectListItem { Value = "2", Text = "Không hiển thị" } }, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script type="text/javascript">
+    function addClick() {
+        // thu thập dữ liệu trên form đưa vào FormData
+        var fd = new FormData();
+        var file = $('#Image').prop('files')[0];
+        fd.append("Name", $("#Name").val());
+        fd.append("Position", $("#Position").val());
+        fd.append("Status", $("#Status").val());
+        fd.append("CreatedBy", $("#session").text());
+        fd.append("UpdatedBy", $("#session").text());
+        fd.append("FileImage", file);
+
+        var Url = "https://localhost:7005/api/Sliders";
+        $.ajax({
+            url: Url,
+            method: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                console.log(response);
+                alert("Add Successfully Slider Name: " + $("#Name").val());
+                window.location.replace("https://localhost:44357/Admin/Slider/Index");
+            },
+            error: function (errorMessage) {
+                console.log(errorMessage);
+            }
+        });
+    }
+</script>

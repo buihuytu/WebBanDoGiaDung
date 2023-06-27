@@ -1,0 +1,224 @@
+﻿@model WebsiteBanDoGiaDung.Models.MProduct
+
+@{
+    ViewBag.Title = "Cập nhật thông tin sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+@Html.Partial("_MessageAlert")
+
+@Html.AntiForgeryToken()
+<section class="content py-2">
+    <div class="container-fluid">
+        <!--Content-->
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-8">
+                        <h5 class="text-csm">@ViewBag.Title</h5>
+                    </div>
+                    <div class="col-4">
+                        <div class="float-right pt-1">
+                            <button type="submit" class="btn btn-primary btn-sm" onclick="editProduct();">
+                                <i class="fas fa-save"></i>&nbsp; Save
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm">
+                                <a href="~/Admin/Product" class="text-white"><i class="fas fa-door-open"></i>&nbsp; Thoát</a>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="form-horizontal">
+                    <div class="row">
+                        <div class="col-9">
+
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                            @Html.HiddenFor(model => model.ID)
+                            @Html.HiddenFor(model => model.Created_at)
+                            @Html.HiddenFor(model => model.Created_by)
+                            @*@Html.HiddenFor(model => model.Image)*@
+                            <span style="display:none" id="session">@HttpContext.Current.Session["Admin_ID"].ToString()</span>
+                            <div class="form-group">
+                                @Html.Label("Tên sản phẩm", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Thông số kỹ thuật")
+                                <div class="">
+                                    @Html.TextAreaFor(model => model.Specification, new { @class = "textarea" })
+                                    @Html.ValidationMessageFor(model => model.Specification, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Chi tiết sản phẩm")
+                                <div class="">
+                                    @Html.TextAreaFor(model => model.Detail, new { @class = "textarea" })
+                                    @Html.ValidationMessageFor(model => model.Detail, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Mô tả sản phẩm")
+                                <div class="">
+                                    @Html.TextAreaFor(model => model.Description, new { @class = "textarea"})
+                                    @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Thông tin khuyến mại", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+
+                                    @Html.TextAreaFor(model => model.NewPromotion, new { @class = "form-control", @rows = 5})
+                                    @Html.ValidationMessageFor(model => model.NewPromotion, "", new { @class = "text-danger" })
+                                    <i class="text-danger"><strong>* </strong>Vui lòng xuống dòng cho mỗi khuyến mại</i>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("MetaKey", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.TextAreaFor(model => model.MetaKey, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.MetaKey, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("MetaDesc", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.TextAreaFor(model => model.MetaDesc, new { @class = "form-control"})
+                                    @Html.ValidationMessageFor(model => model.MetaDesc, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-3">
+                            <div class="form-group">
+
+                                @Html.Label("Hình ảnh", htmlAttributes: new { @class = "control-label" })
+                                <img src="~/Public/images/products/@Html.DisplayFor(model => model.Image)" alt="@Html.DisplayFor(model => model.Image)" width="150" class="d-block my-2" />
+                                <div class="">
+                                    @Html.TextBoxFor(model => model.Image, new { type = "file", @class = "control-label", accept = "image/*" })
+                                    @Html.ValidationMessageFor(model => model.Image, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("Loại sản phẩm", new { @class = "control-label" })
+                                <div class="">
+                                    @Html.DropDownListFor(model => model.CateID, (SelectList)ViewBag.ListCat, "[Chọn loại sản phẩm]", new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.CateID, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Số lượng", new { htmlAttributes = new { @class = "form-control" } })
+                                <div class="">
+                                    @Html.EditorFor(model => model.Quantity, new { htmlAttributes = new { type = "number", @min = "1", @class = "form-control"} })
+                                    @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Giá gốc", new { htmlAttributes = new { @class = "form-control" } })
+                                <div class="">
+                                    @Html.EditorFor(model => model.Price, new { htmlAttributes = new { type = "number", @class = "form-control"} })
+                                    @Html.ValidationMessageFor(model => model.Price, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Giá khuyến mại", new { htmlAttributes = new { @class = "form-control" } })
+                                <div class="">
+                                    @Html.EditorFor(model => model.ProPrice, new { htmlAttributes = new { type = "number", @class = "form-control"} })
+                                    @Html.ValidationMessageFor(model => model.ProPrice, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Chương trình giảm giá", htmlAttributes: new { @class = "control-label " })
+                                <div class="">
+                                    @Html.DropDownListFor(model => model.Discount, new[] { new SelectListItem { Value = "1", Text = "Có" }, new SelectListItem { Value = "2", Text = "Không" } }, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.Discount, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Chương trình trả góp 0%", htmlAttributes: new { @class = "control-label " })
+                                <div class="">
+                                    @Html.DropDownListFor(model => model.Installment, new[] { new SelectListItem { Value = "1", Text = "Có" }, new SelectListItem { Value = "2", Text = "Không" } }, new { @class = "form-control"})
+                                    @Html.ValidationMessageFor(model => model.Installment, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("Trạng thái", htmlAttributes: new { @class = "control-label " })
+                                <div class="">
+                                    @Html.DropDownListFor(model => model.Status, new[] { new SelectListItem { Value = "1", Text = "Có" }, new SelectListItem { Value = "2", Text = "Không" } }, new { @class = "form-control"})
+                                    @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            @{
+                                // Html.TextAreaFor(model => model.MetaKey).Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                            }
+                            @if (Model.NewPromotion != null)
+                            {
+                                String[] arr = Model.NewPromotion.Split(new[] { '\n' });
+                                    
+                                int number = 1;
+                                foreach (var i in arr)
+                                {
+                                    <div class="d-inline">
+                                        @number. @i<br />
+                                    </div>
+                                    number++;
+                                }
+
+                            }
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script type="text/javascript">
+    function editProduct() {
+        var fd = new FormData();
+        var file = $('#Image').prop('files')[0];
+        fd.append("Name", $('#Name').val());
+        fd.append("CateId", $('#CateID').val());
+        fd.append("NewPromotion", $('#NewPromotion').val());
+        fd.append("Installment", $('#Installment').val());
+        fd.append("Discount", $('#Discount').val());
+        fd.append("Detail", $('#Detail').val());
+        fd.append("Description", $('#Description').val());
+        fd.append("Specification", $('#Specification').val());
+        fd.append("Price", parseFloat($('#Price').val()));
+        fd.append("Quantity", $('#Quantity').val());
+        fd.append("ProPrice", parseFloat($('#ProPrice').val()));
+        fd.append("MetaKey", $('#MetaKey').val());
+        fd.append("MetaDesc", $('#MetaDesc').val());
+        fd.append("Status", $('#Status').val());
+        fd.append("CreatedBy", $("#session").text());
+        fd.append("UpdatedBy", $("#session").text());
+        fd.append("FileImage", file);
+
+        var Url = "https://localhost:7005/api/Products/id?ID=" + $('#ID').val();
+        $.ajax({
+            url: Url,
+            method: 'PUT',
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                console.log(response);
+                alert("Edit Successfully Product Name: " + $("#Name").val());
+                window.location.replace("https://localhost:44357/Admin/Product/Index");
+            },
+            error: function (errorMessage) {
+                console.log(errorMessage);
+            }
+        });
+    }
+</script>

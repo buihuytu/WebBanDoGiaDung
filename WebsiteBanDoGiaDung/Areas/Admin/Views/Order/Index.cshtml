@@ -1,0 +1,192 @@
+﻿@model IEnumerable<WebsiteBanDoGiaDung.Models.ListOrder>
+
+@{
+    ViewBag.Title = "Danh sách đơn hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+@Html.Partial("_MessageAlert")
+<section class="content py-2">
+    <div class="container-fluid">
+        <!--Content-->
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-8">
+                        <h5 class="text-csm">@ViewBag.Title</h5>
+                    </div>
+                    <div class="col-4">
+                        <div class="float-right pt-1">
+                            <button type="button" class="btn btn-danger btn-sm">
+                                <a href="~/Admin/Order/Trash" class="text-white" id="trash"><i class="far fa-trash-alt fa-xs"></i>&nbsp; Đơn hàng đã hủy</a>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body">
+                <table id="tblOrder" class="table table-bordered table-hover" style="font-size:15px">
+                    <thead>
+                        <tr>
+                            <th class="text-center no-sort text-dark" style="width:3rem;">#</th>
+                            <th class="text-primama"> Khách hàng </th>
+                            <th class="no-sort text-primama text-center">Trạng thái</th>
+                            <th class="no-sort text-primama text-right">Tổng tiền</th>
+                            <th class="no-sort text-primama">Ngày Đặt</th>
+                            <th class="no-sort text-primama">ExportDate</th>
+                            <th class="no-sort text-center text-primama" style="width:10rem">Action</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+    </div>
+</section>
+<style>
+    .text-primama {
+        color: #1e91cf;
+    }
+</style>
+<div class="modal fade" id="modal-secondary">
+    <div class="modal-dialog">
+        <div class="modal-content bg-light">
+            <div class="modal-header">
+                <h5 class="modal-title">Trạng thái đơn hàng</h5>
+                <div id="id" style="display:none"></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body bg-white">
+                <div class="row">
+                    <div class="col-5 text-right">Trạng thái đơn hàng</div>
+                    <div class="col-7">
+                        <select class="form-control" id="optionStatus">
+                            <option value="1">Chờ Xử Lý</option>
+                            <option value="2">Đang xử lý</option>
+                            <option value="3">Hoàn thành</option>
+                        </select>
+                    </div>
+
+                    <div class="col-5 py-2 text-right">Ghi chú</div>
+                    <div class="col-7 py-2">
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="changeStatusOrder btn btn-secondary" onclick="changeStatus();">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        GetAllOrders();
+    });
+
+    function printTable(orders) {
+        $("#tblOrder tbody").remove();
+        if ($("#tblOrder tbody").length == 0) {
+            $("#tblOrder").append("<tbody></tbody>");
+        }
+
+        for (const order of orders) {
+            var money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.sAmount);
+            var status = '';
+            if (order.status == 1)
+            {
+                status += `<small class="badge badge-secondary ba${order.id}"> Chờ xử lý</small>`;
+            }
+            else if (order.status == 2)
+            {
+                status += `<small class="badge badge-info ba${order.id}">Đang xử lý</small>`;
+            }
+            else
+            {
+                status += `<small class="badge badge-danger ba${order.id}">Hoàn thành</small>`;
+            }
+            var d = new Date(order.createDate);
+            createDate = d.toLocaleString("nl-BE");
+            var e = new Date(order.exportDate);
+            exportDate = e.toLocaleString("nl-BE");
+            $("#tblOrder tbody").append(
+                `<tr>
+                    <td class="text-center">
+                        ${order.id}
+                    </td>
+                    <td>
+                        <a href="admin/order/detail?id=<%= cat.IDO%>">
+                            ${order.customerName}
+                        </a>
+                    </td>
+                    <td class='text-center'>
+                        <button class="StatusOrder btn p-0" data-status="${order.status}" data-id="${order.id}" data-toggle="modal" data-target="#modal-secondary" onclick=getId('${order.id}');>
+                            ${status}
+                        </button>
+                    </td>
+                    <td class="text-right">
+                        ${money}
+                    </td>
+                    <td>
+                        ${createDate}
+                    </td>
+                    <td class="export-date${order.id}">
+                        ${exportDate}
+                    </td>
+                    <td class="text-center">
+                        <button type="button" style="background:#5bc0de" class="btn btn-sm px-3" data-toggle="tooltip" data-placement="top" title="Chi tiết đơn hàng">
+                            <a href="/Admin/Order/Details/${order.id}" class="text-white">
+                                <i class="far fa-eye"></i>
+                            </a>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm px-3" data-toggle="tooltip" data-placement="top" title="Xóa">
+                            <a href="/Admin/Order/DelTrash/${order.id}" class="text-white"><i class="far fa-trash-alt"></i></a>
+                        </button>
+                    </td>
+                </tr>`
+                )
+        }
+    }
+
+    function GetAllOrders() {
+        var Url = 'https://localhost:7005/api/Orders';
+        $.ajax({
+            url: Url,
+            method: 'GET',
+            contentType: 'application/json;charset=utf-8',
+            success: function (response) {
+                console.log(response);
+                $("#trash").text("Đơn hàng đã hủy (" + response.countTrash + ")");
+                printTable(response.results);
+            },
+            error: function (errorMessage) {
+                console.log(errorMessage);
+            }
+        });
+    }
+
+    function getId(id) {
+        $("#id").text(id)
+    }
+
+    function changeStatus() {
+        $.ajax({
+            url: "/Admin/Order/changeStatus",
+            data: { id: $("#id").text(), op: $("#optionStatus").val() },
+            dataType: 'json',
+            type: 'POST',
+            success: function (res) {
+                alert('Thay đổi trạng thái thành công! id= ' + $("#id").text());
+                $("#modal-secondary").hide();
+                $(".modal-backdrop.fade.show").hide();
+                GetAllOrders();
+            }
+        });
+    }
+    
+</script>

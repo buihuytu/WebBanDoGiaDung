@@ -1,0 +1,160 @@
+﻿@model IEnumerable<WebsiteBanDoGiaDung.Models.MCategory>
+@{
+    ViewBag.Title = "Danh mục sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+@Html.Partial("_MessageAlert")
+
+<section class="content py-2">
+    <div class="container-fluid">
+        <!--Content-->
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-8">
+                        <h5 class="text-csm">@ViewBag.Title</h5>
+                    </div>
+                    <div class="col-4">
+                        <div class="float-right pt-1">
+                            <button type="button" class="btn btn-primary btn-sm">
+                                <a href="~/Admin/Category/Create" class="text-white"><i class="fas fa-plus fa-xs"></i>&nbsp; Thêm mới</a>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm">
+                                <a href="~/Admin/Category/Trash" class="text-white" id="trash"><i class="far fa-trash-alt fa-xs"></i>&nbsp; Thùng rác </a>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body">
+                <table id="cate1" class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-center no-sort" style="width:3rem;">ID</th>
+                            <th class="no-sort">Tên danh mục</th>
+
+                            <th>Cấp cha</th>
+                            <th class="">Ngày tạo</th>
+                            <th class="no-sort text-center" style="width:10rem">Action</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+   
+</section>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        GetAllCategories();
+        
+    });
+
+
+
+    function printTable(categories) {
+        $("#cate1 tbody").remove();
+        if ($("#cate1 tbody").length == 0) {
+            $("#cate1").append("<tbody></tbody>");
+        }
+        for (const category of categories) {
+            var level = '';
+            var checkStatus = '';
+            if (category.parentId == 0)
+            {
+                level += '<span style="color:red;"> Cấp cha</span>';
+            }
+            else
+            {
+                for (const il of categories)
+                {
+                    if (category.parentId == il.id)
+                    {
+                        level += '<span>' + il.name + '</span>'
+                    }
+                }
+            }
+           
+            if (category.status == 1){
+                checkStatus += '<input class="changeStatus" data-id="' + category.id + '" data-controller="Category" type="checkbox" onClick="status(\'' + category.id + '\');" checked>';
+            }
+            else{
+                checkStatus += '<input class="changeStatus" data-id="' + category.id + '" data-controller="Category" type="checkbox" onClick="status(\'' + category.id + '\');" >';
+            }
+
+            var d = new Date(category.createdAt.trim());
+            createdAt = d.toLocaleString("nl-BE");
+            $("#cate1 tbody").append(
+                `<tr>
+                    <td class="text-center">${category.id}</td>
+                    <td><a href="/Admin/Category/Details/${category.id} ">${category.name}</a>  </td>
+
+                    <td>
+                        ${level}
+                    </td>
+                    <td>  ${createdAt}</td>
+                    <td class="text-center">
+                        <label class="switch">
+                            ${checkStatus}
+                            <span class="slider round"></span>
+                        </label>
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Chỉnh sửa">
+                            <a href="/Admin/Category/Edit/${category.id}" class="text-white"><i class="fas fa-pen"></i></a>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top" title="Xóa">
+                            <a href="/Admin/Category/DelTrash/${category.id}" class="text-white"><i class="far fa-trash-alt"></i></a>
+                        </button>
+                    </td>
+                </tr>`
+            );
+        }
+
+    };
+
+    function GetAllCategories() {
+        var Url = 'https://localhost:7005/api/Categories';
+        $.ajax({
+            url: Url,
+            method: 'GET',
+            contentType: 'application/json;charset=utf-8',
+            success: function (response) {
+                console.log(response);
+                $("#trash").text("Thùng rác (" + response.countTrash + ")");
+                
+                printTable(response.list)
+            },
+            error: function (errorMessage) {
+                console.log(errorMessage);
+            }
+        });
+    };
+
+    function status(id) {
+        
+        $.ajax({
+            url: "/Admin/Category/changeStatus",
+            data: { id: id },
+            dataType: 'json',
+            type: 'POST',
+            success: function (res) {
+                var i;
+                $('table > tbody  > tr').each(function (index) {
+
+                    if ($(".changeStatus").eq(index).attr("data-id") == id) {
+                        i = index;
+                    }
+                });
+                alert('Thay đổi trạng thái thành công! id= ' + id)
+                if (res.Status == 1) {
+                    $(".changeStatus").eq(i).prop('checked', true);
+                } else {
+                    $(".changeStatus").eq(i).prop('checked', false);
+                }
+            }
+        });
+    }
+
+</script>

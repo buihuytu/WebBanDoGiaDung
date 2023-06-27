@@ -1,0 +1,132 @@
+﻿@model WebsiteBanDoGiaDung.Models.MPost
+
+@{
+    ViewBag.Title = "Sửa nội dung trang đơn";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@Html.Partial("_MessageAlert")
+
+@Html.AntiForgeryToken()
+<section class="content py-2">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-8">
+                        <h5 class="text-csm">@ViewBag.Title</h5>
+                    </div>
+                    <div class="col-4">
+                        <div class="float-right pt-1">
+                            <button type="submit" class="btn btn-primary btn-sm" onclick="editPage();">
+                                <i class="fas fa-save"></i>&nbsp; Save
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm">
+                                <a href="~/Admin/Page" class="text-white"><i class="fas fa-door-open"></i>&nbsp; Thoát</a>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="form-horizontal">
+                    <div class="row">
+                        <div class="col-9">
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                            @Html.HiddenFor(model => model.ID)
+                            @Html.HiddenFor(model => model.Created_at)
+                            @Html.HiddenFor(model => model.Created_by)
+                            @*@Html.HiddenFor(model => model.Image)*@
+                            <span style="display:none" id="session">@HttpContext.Current.Session["Admin_ID"].ToString()</span>
+                            <div class="form-group">
+                                @Html.Label("Tên trag đơn", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("Nội dung trang")
+                                <div class="">
+                                    @Html.TextAreaFor(model => model.Detail, new { @class = "textarea" })
+                                    @Html.ValidationMessageFor(model => model.Detail, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("MetaKey", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.TextAreaFor(model => model.MetaKey, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.MetaKey, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.Label("MetaDesc", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.TextAreaFor(model => model.MetaDesc, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.MetaDesc, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-3">
+                            <div class="form-group">
+                                @Html.Label("Hình ảnh", htmlAttributes: new { @class = "control-label" })
+                                <div class="">
+                                    @Html.TextBoxFor(model => model.Image, new { type = "file", @class = "control-label", accept = "image/*" })
+                                    @Html.ValidationMessageFor(model => model.Image, "", new { @class = "text-danger" })
+                                </div>
+                                <img src="~/Public/images/page/@Html.DisplayFor(model =>model.Image)" alt="@Html.DisplayFor(model =>model.Image)" style="width:100px; height:100px" class="d-block my-2" />
+                            </div>
+
+                            <div class="form-group">
+                                @Html.Label("Trạng thái", htmlAttributes: new { @class = "control-label " })
+                                <div class="">
+                                    @Html.DropDownListFor(model => model.Status, new[] { new SelectListItem { Value = "1", Text = "Hiển thị" }, new SelectListItem { Value = "2", Text = "Không hiển thị" } }, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script type="text/javascript">
+    function editPage() {
+
+        // thu thập dữ liệu trên form đưa vào FormData
+        var fd = new FormData();
+        var file = $('#Image').prop('files')[0];
+        fd.append("TopicId", 0);
+        fd.append("Title", $('#Title').val());
+        fd.append("Detail", $('#Detail').val());
+        fd.append("MetaKey", $('#MetaKey').val());
+        fd.append("MetaDesc", $('#MetaDesc').val());
+        fd.append("Status", $('#Status').val());
+        fd.append("CreatedBy", $("#session").text());
+        fd.append("UpdatedBy", $("#session").text());
+        fd.append("FileImage", file);
+
+        var Url = "https://localhost:7005/api/Pages/id?ID=" + $("#ID").val().trim();
+        $.ajax({
+            url: Url,
+            method: 'PUT',
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                console.log(response);
+                alert("Edit Successfully Page Name: " + $("#Title").val());
+                window.location.replace("https://localhost:44357/Admin/Page/Index");
+            },
+            error: function (errorMessage) {
+                console.log(errorMessage);
+            }
+        });
+    }
+</script>

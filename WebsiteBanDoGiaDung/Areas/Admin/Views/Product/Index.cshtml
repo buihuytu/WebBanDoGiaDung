@@ -1,0 +1,252 @@
+﻿@model IEnumerable<WebsiteBanDoGiaDung.Models.ProductCategory>
+
+@{
+    ViewBag.Title = "Quản lý sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<section class="content py-2">
+    <div class="container-fluid">
+        <!--Content-->
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-8">
+                        <h5 class="text-csm">@ViewBag.Title</h5>
+                    </div>
+                    <div class="col-4">
+                        <div class="float-right pt-1">
+                            <button type="button" class="btn btn-primary btn-sm">
+                                <a href="~/Admin/Product/Create" class="text-white"><i class="fas fa-plus fa-xs"></i>&nbsp; Thêm mới</a>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm">
+                                <a href="~/Admin/Product/Trash" class="text-white" id="trash"><i class="far fa-trash-alt fa-xs"></i>&nbsp; Thùng rác</a>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body">
+                <table id="tblProduct" class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width:3rem;">STT</th>
+                            <th class="text-center" style="width:3rem;">ID</th>
+                            <th class="text-center no-sort">Hình ảnh</th>
+                            <th class="">Tên sản phẩm</th>
+                            <th class="no-sort ">Danh mục</th>
+                            <th class="no-sort">Khuyến mãi</th>
+                            <th class="no-sort text-center" style="width:10rem">Action</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div id="page" style="display:none"></div>
+            <div id="totalPage" style="display:none"></div>
+        </div>
+    </div>
+</section>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        $("#tblProduct").DataTable({
+            "sorting": false,
+            });
+        
+        $("#tblProduct th").removeClass("sorting")
+        $("#tblProduct th").removeClass("sorting_asc")
+
+        paging()
+        
+        $("input[type='search']").keyup(function () {
+            let strSearch = $("input[type='search']").val();
+            if (strSearch == "") {
+                paging();
+            }
+            else {
+                search(strSearch);
+            }
+        });
+
+        
+    });
+
+    function paging() {
+
+        $("#tblProduct_paginate").append(`<div id="current-page" style="justify-content: flex-start;display:flex"></div>`)
+
+        let page = 1;
+        GetAllProducts(page);
+        $("#tblProduct_next").click(function () {
+            if (page < parseInt($("#totalPage").text())) {
+                page++;
+                GetAllProducts(page);
+            }
+        })
+        $("#tblProduct_previous").click(function () {
+            if (page > 1) {
+                page--;
+                GetAllProducts(page);
+            }
+        })
+    }
+
+    function printTable(products, totalProduct) {
+        
+        $("#tblProduct tbody").remove();
+        if ($("#tblProduct tbody").length == 0) {
+            $("#tblProduct").append("<tbody></tbody>");
+        }
+        var stt = 1;
+        for (const product of products) {
+            var discount = '';
+            if (product.productDiscount == 1) {
+                discount += `<input class="changeDiscount" data-id="${product.productId}" data-controller="Product" type="checkbox" onClick="discount(${product.productId});" checked>`;
+            }
+            else {
+                discount += `<input class="changeDiscount" data-id="${product.productId}" data-controller="Product" type="checkbox" onClick="discount(${product.productId});">`;
+            }
+            var status = '';
+            if (product.productStatus == 1){
+                status += `<input class="changeStatus" data-id="${product.productId}" data-controller="Product" type="checkbox" onClick="status(${product.productId});" checked>`;
+            }
+            else{
+                status += `<input class="changeStatus" data-id="${product.productId}" data-controller="Product" type="checkbox" onClick="status(${product.productId});">`;
+            }
+            $("#tblProduct tbody").append(
+                `<tr>
+                    <td>${stt}</td>
+                    <td class="text-center">${product.productId}</td>
+                    <td><img src="/Public/images/products/${product.productImg}" alt="Error" width="70" class="d-block m-auto" />  </td>
+                    <td><a href="/Admin/Product/Details/${product.productId}">${product.productName}</a>  </td>
+                    <td>${product.categoryName}</td>
+                    <td class="text-center">
+                        <label class="switch">
+                            ${discount}
+                            <span class="slider round"></span>
+                        </label>
+
+                    </td>
+                    <td class="text-center">
+                        <label class="switch">
+                            ${status}
+                            <span class="slider round"></span>
+                        </label>
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Chỉnh sửa">
+                            <a href="/Admin/Product/Edit/${product.productId}" class="text-white"><i class="fas fa-pen"></i></a>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top" title="Xóa">
+                            <a href="/Admin/Product/DelTrash/${product.productId}" class="text-white"><i class="far fa-trash-alt"></i></a>
+                        </button>
+                    </td>
+                </tr>`
+            );
+            stt++;
+        }
+        $("#tblProduct_info").text(`Showing ${products.length} of ${totalProduct} entries`);
+    }
+
+
+    function GetAllProducts(page) {
+        if (page == 1) {
+            $("#tblProduct_previous").css('cursor', 'not-allowed')
+        }
+        else {
+            $("#tblProduct_previous").css('cursor', 'pointer')
+        }
+        if (page == parseInt($("#totalPage").text())) {
+            $("#tblProduct_next").css('cursor', 'not-allowed')
+        }
+        else {
+            $("#tblProduct_next").css('cursor', 'pointer')
+        }
+        
+        var Url = 'https://localhost:7005/api/Products/GetProductPage/' + page;
+        $.ajax({
+            url: Url,
+            method: 'GET',
+            contentType: 'application/json;charset=utf-8',
+            dataType: 'json',
+            success: function (response) {
+                console.log(response);
+                $("#trash").text("Thùng rác (" + response.countTrash + ")");
+                printTable(response.list, response.countProduct);
+                $("#totalPage").text(`${Math.ceil(response.countProduct / 10)}`)
+                $("#current-page").text(`Page ${page}/${$("#totalPage").text()}`)
+                
+            },
+            error: function (errorMessage) {
+                console.log(errorMessage);
+            }
+        });
+    };
+
+    function status(id) {
+        $.ajax({
+            url: "/Admin/Product/changeStatus",
+            data: { id: id },
+            dataType: 'json',
+            type: 'POST',
+            success: function (res) {
+                var i;
+                $('table > tbody  > tr').each(function (index) {
+
+                    if ($(".changeStatus").eq(index).attr("data-id") == id) {
+                        i = index;
+                    }
+                });
+                alert('Thay đổi trạng thái thành công! id= ' + id)
+                if (res.Status == 1) {
+                    $(".changeStatus").eq(i).prop('checked', true);
+                } else {
+                    $(".changeStatus").eq(i).prop('checked', false);
+                }
+            }
+        });
+    }
+
+    function discount(id) {
+        $.ajax({
+            url: "/Admin/Product/changeDiscount",
+            data: { id: id },
+            dataType: 'json',
+            type: 'POST',
+            success: function (res) {
+                var i;
+                $('table > tbody  > tr').each(function (index) {
+
+                    if ($(".changeDiscount").eq(index).attr("data-id") == id) {
+                        i = index;
+                    }
+                });
+                alert('Thay đổi trạng thái thành công! id= ' + id)
+                if (res.Discount == 1) {
+                    $(".changeDiscount").eq(i).prop('checked', true);
+                } else {
+                    $(".changeDiscount").eq(i).prop('checked', false);
+                }
+            }
+        });
+    }
+
+    function search(str) {
+        var Url = 'https://localhost:7005/api/Products/GetProductByName/' + str;
+        $.ajax({
+            url: Url,
+            method: 'GET',
+            contentType: 'application/json;charset=utf-8',
+            dataType: 'json',
+            success: function (response) {
+                console.log(response);
+                printTable(response);
+                $("#tblProduct_info").text(`Showing ${response.length} of ${response.length} entries`);
+
+            },
+            error: function (errorMessage) {
+                console.log(errorMessage);
+            }
+        });
+    }
+</script>
